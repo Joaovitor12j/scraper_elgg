@@ -28,7 +28,7 @@ def fetch_profile(profile_url: str) -> list | None:
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"ERRO: {e}", file=sys.stderr)
-        return Non
+        return None
 
 def map_to_items(raw: list) -> list:
     if not raw or not isinstance(raw, list) or "publications" not in raw[0]:

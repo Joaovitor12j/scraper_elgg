@@ -37,12 +37,14 @@ def fetch_scholar(author: str) -> dict | None:
 
 
 def map_to_items(raw: dict) -> list:
+    if not isinstance(raw, dict):
+        return []
     items = []
     for result in raw.get("search_results", []):
         items.append({
             "title": result.get("title", ""),
             "body": result.get("snippet", ""),
-            "published_at": str(result.get("year", "")),
+            "published_at": str(result.get("year") or ""),
             "source_url": result.get("link", ""),
         })
     return items

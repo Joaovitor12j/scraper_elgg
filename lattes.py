@@ -20,7 +20,7 @@ RATE_LIMIT_S = int(os.environ.get("SCRAPING_RATE_LIMIT_MS", 1000)) / 1000
 YEAR_PATTERN = re.compile(r"\b(19|20)\d{2}\b")
 
 # Lattes section headings that contain article publications
-ARTICLE_SECTIONS = re.compile(r"artigo|publicac", re.IGNORECASE)
+ARTICLE_SECTIONS = re.compile(r"artigo|publica[cç]", re.IGNORECASE)
 
 
 def build_driver() -> webdriver.Chrome:
@@ -67,7 +67,7 @@ def scrape_lattes(url: str) -> list:
     for section in soup.select("div[data-cv-group]"):
         if not ARTICLE_SECTIONS.search(section.get("data-cv-group", "")):
             continue
-        for pub in section.select("div.cita-artigo, div.artigo-completo, li"):
+        for pub in section.select("div.cita-artigo, div.artigo-completo"):
             items.append(parse_publication(pub, url))
 
     # Fallback: common static Lattes page selectors
@@ -84,12 +84,12 @@ def main():
     parser.add_argument("--url", required=True, help="Full Lattes CV URL (lattes.cnpq.br/...)")
     args = parser.parse_args()
 
-    time.sleep(RATE_LIMIT_S)
     try:
         items = scrape_lattes(args.url)
     except Exception as e:
         print(f"ERRO: {e}", file=sys.stderr)
         items = []
+    time.sleep(RATE_LIMIT_S)
 
     result = {
         "user_guid": args.user_guid,
