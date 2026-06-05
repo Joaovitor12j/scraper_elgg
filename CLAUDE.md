@@ -11,50 +11,49 @@ source .venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure API key (copy and fill in)
+# Configure environment (copy and fill in)
 cp .env.exemple .env
-# Edit .env and set SCRAPING_API_KEY="your_key_here"
+# Edit .env: set SCRAPING_API_KEY and optionally SCRAPING_RATE_LIMIT_MS
 ```
 
 ## Running scripts
 
+All scripts write JSON to stdout. Redirect to a file if persistence is needed.
+
 ```bash
-# LinkedIn profile scraper (edit the `perfis` list in the script first)
-python scrapingdog-linkedIn.py
+# LinkedIn publications scraper
+python scrapingdog-linkedIn.py --user-guid <guid> --profile-url <linkedin_url>
 
-# Google Scholar scraper (edit `termos_de_pesquisa` list first)
-python scrapingdog-academico.py
+# Google Scholar scraper
+python scrapingdog-academico.py --user-guid <guid> --author "Nome Completo"
 
-# Prototype/test scripts
-python teste-prodotipos-scraping/main.py        # DuckDuckGo search (site-specific)
-python teste-prodotipos-scraping/sem_site_especifico.py  # DuckDuckGo (open search)
-python teste-prodotipos-scraping/scholar.py     # scholarly library direct access
-python teste-prodotipos-scraping/web-scraping.py  # Selenium scraper for Lattes
-python teste-prodotipos-scraping/filtroJson.py  # Post-process existing LinkedIn JSON results
+# Lattes CV scraper
+python lattes.py --user-guid <guid> --url "https://lattes.cnpq.br/..."
 ```
 
 No test suite or linter is configured.
 
 ## Architecture
 
-The project has two layers:
+Three production scripts, each producing the same JSON contract:
 
-**Production scripts (root)** — use the [ScrapingDog](https://www.scrapingdog.com/) paid API (`SCRAPING_API_KEY`) to collect structured data:
-- `scrapingdog-linkedIn.py`: fetches a LinkedIn profile via `api.scrapingdog.com/profile`, then filters the `publications` array for entries matching the regex `artigo|article`, and writes two JSON outputs per profile — full data to `resultados_linkedin/` and filtered data to `resultados_linkedin_filtrados/`.
-- `scrapingdog-academico.py`: queries `api.scrapingdog.com/google_scholar` with `author:"name"` syntax and writes results to `resultados_academico/`.
+```json
+{
+  "user_guid": "<passed-in arg>",
+  "source": "linkedin | google_scholar | lattes",
+  "items": [
+    { "title": "", "body": "", "published_at": "", "source_url": "" }
+  ]
+}
+```
 
-Both root scripts iterate over a hardcoded list (`perfis` / `termos_de_pesquisa`) and include `time.sleep()` rate limiting between requests.
-
-**Prototype scripts (`teste-prodotipos-scraping/`)** — exploratory approaches without a paid API:
-- `main.py` / `sem_site_especifico.py`: use the `ddgs` library to run DuckDuckGo searches, optionally restricted to specific sites (e.g., `scholar.google.com`).
-- `scholar.py`: uses the `scholarly` library to query Google Scholar directly.
-- `web-scraping.py`: uses Selenium + ChromeDriver + BeautifulSoup to scrape Lattes (Brazilian academic CV platform at lattes.cnpq.br), which requires JavaScript rendering and handles CAPTCHA waits manually.
-- `filtroJson.py`: standalone post-processor that reads from `resultados_linkedin/` and re-applies the article filter — useful for reprocessing previously saved raw data without re-hitting the API.
-- `TesteZenRows.py`: prototype for ZenRows API with JS rendering and CAPTCHA solving enabled.
+- `scrapingdog-linkedIn.py`: calls `api.scrapingdog.com/profile` with `premium: true`, filters publications matching `(?i)artigo|article`.
+- `scrapingdog-academico.py`: calls `api.scrapingdog.com/google_scholar` with `author:"name"` syntax.
+- `lattes.py`: uses Selenium (headless Chrome) + BeautifulSoup to scrape Lattes (lattes.cnpq.br); waits on `#identificacao` to confirm the CV page loaded before parsing.
 
 ## Key conventions
 
-- Output directories (`resultados_linkedin/`, `resultados_linkedin_filtrados/`, `resultados_academico/`) are created at runtime if missing; they are gitignored.
-- The article filter regex `(?i)artigo|article` is defined at module level for efficiency and reused across multiple scripts.
-- The `perfis` list in `scrapingdog-linkedIn.py` uses the format `['display_name', 'linkedin_profile_url']`; the display name becomes the output filename.
+- Rate limiting is controlled by `SCRAPING_RATE_LIMIT_MS` env var (default 1000 ms). No hardcoded sleeps.
+- `SCRAPING_API_KEY` is required for the two ScrapingDog scripts; loaded from `.env` via `python-dotenv`.
+- Errors are printed to stderr; the script still outputs a valid JSON result with an empty `items` array on failure.
 - ScrapingDog LinkedIn calls use `premium: true` to bypass LinkedIn's bot detection.

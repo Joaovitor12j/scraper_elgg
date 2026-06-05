@@ -1,6 +1,5 @@
-ddgs
 requests
 beautifulsoup4
 selenium
-scholarly
+webdriver-manager
 python-dotenv
