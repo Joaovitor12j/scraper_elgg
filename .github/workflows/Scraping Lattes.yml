@@ -1,0 +1,50 @@
+name: Scraping Lattes
+
+on:
+  workflow_dispatch:
+    inputs:
+      user_guid:
+        description: 'GUID do usuário no Elgg'
+        required: true
+        type: string
+      lattes_url:
+        description: 'URL do currículo Lattes'
+        required: true
+        type: string
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Instalar Google Chrome
+        run: |
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Executar scraper
+        run: |
+          python lattes.py \
+            --user-guid "${{ inputs.user_guid }}" \
+            --url "${{ inputs.lattes_url }}" \
+            > output.json
+
+      - name: Salvar artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lattes-${{ inputs.user_guid }}-${{ github.run_id }}
+          path: output.json
+          retention-days: 1
