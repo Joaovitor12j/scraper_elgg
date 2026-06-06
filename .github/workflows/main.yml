@@ -1,0 +1,46 @@
+name: Scraping LinkedIn
+
+on:
+  workflow_dispatch:
+    inputs:
+      user_guid:
+        description: 'GUID do usuário no Elgg'
+        required: true
+        type: string
+      linkedin_url:
+        description: 'URL do perfil LinkedIn'
+        required: true
+        type: string
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Executar scraper
+        env:
+          SCRAPING_API_KEY: ${{ secrets.SCRAPING_API_KEY }}
+        run: |
+          python scrapingdog-linkedIn.py \
+            --user-guid "${{ inputs.user_guid }}" \
+            --url "${{ inputs.linkedin_url }}" \
+            > output.json
+
+      - name: Salvar artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linkedin-${{ inputs.user_guid }}-${{ github.run_id }}
+          path: output.json
+          retention-days: 1
