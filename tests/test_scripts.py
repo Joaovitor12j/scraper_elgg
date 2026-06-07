@@ -24,7 +24,7 @@ def assert_valid_output(stdout, expected_source, expected_guid):
 
 
 def test_linkedin_mock():
-    r = run_script([PYTHON, "scrapingdog-linkedIn.py", "--user-guid", "guid-teste", "--profile-url", "https://linkedin.com/in/test"])
+    r = run_script([PYTHON, "scrapingdog-linkedIn.py", "--user-guid", "guid-teste", "--url", "https://linkedin.com/in/test"])
     assert r.returncode == 0, f"stderr: {r.stderr}"
     assert_valid_output(r.stdout, "linkedin", "guid-teste")
 
