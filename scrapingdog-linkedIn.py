@@ -49,7 +49,7 @@ def map_to_items(raw: list) -> list:
 def main():
     parser = argparse.ArgumentParser(description="LinkedIn publications scraper via ScrapingDog")
     parser.add_argument("--user-guid", required=True, help="User identifier passed through to output")
-    parser.add_argument("--profile-url", required=True, help="LinkedIn profile URL")
+    parser.add_argument("--url", required=True, help="LinkedIn profile URL")
     args = parser.parse_args()
 
     if os.environ.get("MOCK_MODE") == "1":
@@ -57,7 +57,7 @@ def main():
         print(json.dumps({"user_guid": args.user_guid, "source": "linkedin", "items": mock_items}, ensure_ascii=False))
         sys.exit(0)
 
-    raw = fetch_profile(args.profile_url)
+    raw = fetch_profile(args.url)
     time.sleep(RATE_LIMIT_S)
 
     result = {

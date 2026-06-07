@@ -67,13 +67,28 @@ def scrape_lattes(url: str) -> list:
     for section in soup.select("div[data-cv-group]"):
         if not ARTICLE_SECTIONS.search(section.get("data-cv-group", "")):
             continue
-        for pub in section.select("div.cita-artigo, div.artigo-completo"):
+        for pub in section.select(
+            "li.artigo-completo, li.artigo-aceito, "
+            "div.cita-artigo, div.artigo-completo"
+        ):
             items.append(parse_publication(pub, url))
 
-    # Fallback: common static Lattes page selectors
+    # Fallback: static Lattes page selectors (older layout)
     if not items:
-        for pub in soup.select("div.artigo, div.producao-bibliografica li, div.list-article"):
+        for pub in soup.select(
+            "li.artigo-completo, li.artigo-aceito, "
+            "div.artigo, div.producao-bibliografica li, div.list-article"
+        ):
             items.append(parse_publication(pub, url))
+
+    # Last-resort: any list item inside a section whose heading mentions artigo/publicação
+    if not items:
+        for heading in soup.find_all(re.compile(r"^h\d$"), string=ARTICLE_SECTIONS):
+            container = heading.find_parent("div")
+            if container:
+                for pub in container.select("li"):
+                    if pub.find("b") or pub.find("strong"):
+                        items.append(parse_publication(pub, url))
 
     return items
 
