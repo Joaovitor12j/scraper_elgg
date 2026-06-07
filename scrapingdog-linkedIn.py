@@ -52,6 +52,11 @@ def main():
     parser.add_argument("--profile-url", required=True, help="LinkedIn profile URL")
     args = parser.parse_args()
 
+    if os.environ.get("MOCK_MODE") == "1":
+        mock_items = [{"title": "Artigo Mock LinkedIn", "body": "Resumo mock de publicação", "published_at": "2024", "source_url": "https://linkedin.com/mock"}]
+        print(json.dumps({"user_guid": args.user_guid, "source": "linkedin", "items": mock_items}, ensure_ascii=False))
+        sys.exit(0)
+
     raw = fetch_profile(args.profile_url)
     time.sleep(RATE_LIMIT_S)
 

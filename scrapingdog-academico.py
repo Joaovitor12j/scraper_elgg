@@ -56,6 +56,11 @@ def main():
     parser.add_argument("--author", required=True, help="Author name to search (e.g. 'Fulano de Tal')")
     args = parser.parse_args()
 
+    if os.environ.get("MOCK_MODE") == "1":
+        mock_items = [{"title": "Artigo Mock Scholar", "body": "Abstract mock do artigo acadêmico", "published_at": "2023", "source_url": "https://scholar.google.com/mock"}]
+        print(json.dumps({"user_guid": args.user_guid, "source": "google_scholar", "items": mock_items}, ensure_ascii=False))
+        sys.exit(0)
+
     raw = fetch_scholar(args.author)
     time.sleep(RATE_LIMIT_S)
 

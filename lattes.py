@@ -84,6 +84,11 @@ def main():
     parser.add_argument("--url", required=True, help="Full Lattes CV URL (lattes.cnpq.br/...)")
     args = parser.parse_args()
 
+    if os.environ.get("MOCK_MODE") == "1":
+        mock_items = [{"title": "Artigo Mock Lattes", "body": "Resumo do artigo mock do Lattes", "published_at": "2022", "source_url": "https://lattes.cnpq.br/mock"}]
+        print(json.dumps({"user_guid": args.user_guid, "source": "lattes", "items": mock_items}, ensure_ascii=False))
+        sys.exit(0)
+
     try:
         items = scrape_lattes(args.url)
     except Exception as e:

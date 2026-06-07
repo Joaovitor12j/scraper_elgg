@@ -35,7 +35,7 @@ jobs:
         run: |
           python scrapingdog-linkedIn.py \
             --user-guid "${{ inputs.user_guid }}" \
-            --url "${{ inputs.linkedin_url }}" \
+            --profile-url "${{ inputs.linkedin_url }}" \
             > output.json
 
       - name: Salvar artifact
