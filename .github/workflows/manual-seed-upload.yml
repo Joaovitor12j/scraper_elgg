@@ -1,0 +1,26 @@
+name: Manual Seed Upload
+
+on:
+  workflow_dispatch:
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        seed:
+          - emanuelli-coletti
+          - ricardo-figueiro-cruz
+          - maria-alessandra-mendes
+          - ingridi-bortolaso
+          - gabriela-reyes
+          - idio-fridolino-altmann
+          - joice-junqueira
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: manual-seed-${{ matrix.seed }}
+          path: manual_seed/${{ matrix.seed }}.json
+          retention-days: 1
